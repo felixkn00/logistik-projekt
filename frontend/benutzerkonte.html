@@ -1,0 +1,145 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="de" lang="de">
+
+<head>
+    <title>Benutzerkonte</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <meta name="keywords" content="" />
+    <meta name="generator" content="Webocton - Scriptly (www.scriptly.de)" />
+
+    <!-- Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
+
+    <link href="css-benutzerkonte.css" type="text/css" rel="stylesheet" />
+</head>
+
+<body>
+    <div id="wrapper">
+        <header>
+            <div class="LoginLogo">
+                <h1>LogiConnect</h1>
+                <img src="user.png" alt="user" width="40px" height="auto" />
+            </div>
+        </header>
+
+        <div class="row">
+            <aside class="column" id="personalliste-container">
+                <h2>Personaliste</h2>
+                <div class="personalliste">
+                    <form action="/action_page.php">
+                        <input type="text" placeholder=" Search.." name="search">
+                        <button type="submit"><i class="fa fa-search"></i></button>
+                    </form>
+                </div>
+            </aside>
+
+            <main class="column">
+                <section>
+                    <form>
+                        <h2>Personal/ID</h2>
+                        <br />
+                        <label>Personalnummer</label>
+                        <br /><br />
+                        <input type="text" name="personalnummer" id="personalnummer" />
+                        <br /><br />
+                        <label>Personalname</label>
+                        <br /><br />
+                        <input type="text" name="personalname" id="personalname" />
+
+                        <div class="configurationOptions">
+                            <input type="checkbox" name="darflesen" id="darflesen" />
+                            <p>&nbsp;&nbsp;lesen</p>
+                            <br />
+                            <input type="checkbox" name="darflesen" id="darflesen" />
+                            <p>&nbsp;&nbsp;bearbeiten</p>
+                            <br />
+                            <input type="checkbox" name="darflesen" id="darflesen" />
+                            <p>&nbsp;&nbsp;darf l&#246;schen</p>
+                            <br />
+                            <input type="checkbox" name="darflesen" id="darflesen" />
+                            <p>&nbsp;&nbsp;darf verwaltung</p>
+                        </div>
+                        <br /><br /><br />
+
+                        <div class="justifyContent">
+                            <input type="reset" value="Abbrechen" />
+                            <input type="submit" value="Best&#228;tigung" id="bestaetigung" />
+                            <br /><br />
+                        </div>
+                    </form>
+                </section>
+
+                <section>
+                    <h2>Personal Erstellung</h2>
+                    <form>
+                        <br />
+                        <label>Name</label>
+                        <br /><br />
+                        <input type="text" name="einstellungName" id="einstellungName" />
+                        <br /><br />
+                        <label>Passwort</label>
+                        <br /><br />
+                        <input type="text" name="einstellungPasswort" id="einstellungPasswort" />
+                        <br /><br /><br />
+                        <input type="submit" value="Einstellen" id="einstellen" />
+                        <br /><br />
+                    </form>
+                </section>
+            </main>
+
+        </div>
+        <footer class="benutzerkonteFooter">
+            <a href="">Impresum | </a>
+            <a href="">Datenschutzerkl&auml;rung | </a>
+            <a href="">Nutzungsbedingungen</a> <br />
+        </footer>
+
+        <nav>
+            <ul class="nav-links">
+                <li><a href="startseite.html"><i class="glyphicon glyphicon-home icon-size"></i></a>
+                    <ul>
+                        <li><a class="nav-name">Startseite</a></li>
+                    </ul>
+                </li>
+                <li style="color: #520884;"><i class="glyphicon glyphicon-user icon-size"><a
+                            href="benutzerkonte.html"></i></a>
+                    <ul>
+                        <li><a class="nav-name" style="color: #520884;">Benutzerkonte</a></li>
+                    </ul>
+                </li>
+                <li><a href="inventar.html"><i class="bi bi-ui-checks-grid icon-size"></i></a>
+                    <ul>
+                        <li><a class="nav-name">Inventar</a></li>
+                    </ul>
+                </li>
+                <li><a href="lagerunterseite.html"><i class="bi bi-house-down-fill icon-size"></i></a>
+                    <ul>
+                        <li><a class="nav-name">Lagerunterseite</a></li>
+                    </ul>
+                </li>
+                <li><a href="lieferanten.html"><i class="bi bi-truck-front-fill icon-size"></i>
+                        </i>
+                    </a>
+                    <ul>
+                        <li><a class="nav-name">Lieferanten</a></li>
+                    </ul>
+                </li>
+                <li><a href="lieferungsdetail.html"><i class="bi bi-file-text-fill icon-size"></i></a>
+                    <ul>
+                        <li><a class="nav-name">Lieferungsdetail</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</body>
+
+</html>
