@@ -1,0 +1,407 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="de" lang="de">
+
+<head>
+    <title>Benutzerkonte</title>
+
+    <meta http-equiv="content-type" content="text/html;" charset="UTF-8" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <meta name="keywords" content="" />
+    <meta name="generator" content="Webocton - Scriptly (www.scriptly.de)" />
+
+    <!-- Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
+
+    <link href="css-benutzerkonte.css" type="text/css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vee-validate@2.2.15/dist/vee-validate.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+
+    <script type="module">
+        import { authGuard } from './js/authGuard.js';
+
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "F5" || (event.ctrlKey && event.key === "r")) {
+                event.preventDefault();
+                console.log("Press F5 Key is disabled")
+            }
+        })
+
+
+
+        authGuard()
+
+    </script>
+
+
+
+</head>
+
+<body>
+    <div id="wrapper">
+        <div id="app">
+            <header>
+                <div class="LoginLogo">
+                    <h1>LogiConnect</h1>
+                    <img src="user.png" alt="user" width="40px" height="auto" />
+                </div>
+            </header>
+
+            <div class="row">
+                <aside class="column" id="personalliste-container">
+                    <h2>Personaliste</h2>
+                    <div class="personalliste">
+                        <table class="table-sortable table table-bordered personalliste-table-container">
+                            <thead>
+                                <tr>
+                                    <th>UserID &Delta;</th>
+                                    <th @click="sortTable('')">Name &Delta;</th>
+                                    <th @click="sortTable('')">Email &Delta;</th>
+                                    <th @click="sortTable('')">Kann schreiben &Delta;</th>
+                                    <th @click="sortTable('')">Kann lesen &Delta;</th>
+                                    <th @click="sortTable('')">Kann ändern &Delta;</th>
+                                    <th @click="sortTable('')">Kann löschen &Delta;</th>
+                                    <th style="color: #b8d1eb;">Superuser Status</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+
+                            <tr v-for="(item, index) in items" :key="index">
+
+                                <td>
+                                    <input type="text" v-model="item.UserID"
+                                        :class="{'changed-input': item.changedFields.UserID}"
+                                        @input="markFieldAsChanged(item, 'UserID')" disabled
+                                        class="personalliste-table-input" />
+                                </td>
+                                <td>
+                                    <input type="text" v-model="item.Username"
+                                        :class="{'changed-input': item.changedFields.Username}"
+                                        @input="markFieldAsChanged(item, 'Username')"
+                                        class="personalliste-table-input" />
+                                </td>
+                                <td>
+                                    <input type="text" v-model="item.Email"
+                                        :class="{'changed-input': item.changedFields.Email}"
+                                        @input="markFieldAsChanged(item, 'Email')" class="personalliste-table-input" />
+                                </td>
+                                <td>
+                                    <input type="checkbox" v-model="item.can_create"
+                                        :class="{'changed-input': item.changedFields.can_create}"
+                                        @input="markFieldAsChanged(item, 'can_create')"
+                                        class="personalliste-table-input" />
+                                </td>
+                                <td>
+                                    <input type="checkbox" v-model="item.can_read"
+                                        :class="{'changed-input': item.changedFields.can_read}"
+                                        @input="markFieldAsChanged(item, 'can_read')"
+                                        class="personalliste-table-input" />
+                                </td>
+                                <td>
+                                    <input type="checkbox" v-model="item.can_update"
+                                        :class="{'changed-input': item.changedFields.can_update}"
+                                        @input="markFieldAsChanged(item, 'can_update')" />
+                                </td>
+                                <td>
+                                    <input type="checkbox" v-model="item.can_delete"
+                                        :class="{'changed-input': item.changedFields.can_delete}"
+                                        @input="markFieldAsChanged(item, 'can_delete')"
+                                        class="personalliste-table-input" />
+                                </td>
+                                <td>
+                                    <div v-if="item.isSuperuser">
+                                        <p>Ja</p>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div v-if="Object.values(item.changedFields).some(field => field)">
+                                        <button @click="saveChanges(item)"
+                                            class="btn btn-primary btn-sm">Speichern</button>
+                                    </div>
+                                </td>
+                                <td>
+                                    <br />
+                                    <div v-if="!item.isSuperuser">
+                                        <button @click="deleteItem(item, index)"
+                                            class="btn btn-danger btn-sm">Löschen</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </aside>
+
+                <main class="column">
+
+
+                    <section>
+                        <h2>Personal Erstellung</h2>
+                        <div>
+                            <form>
+                            <div>
+                                <label for="username">Name</label>
+                                <br /><br />
+                                <input type="text" id="username" v-model="addItemForm.Username"
+                                    v-validate="'required|min:3'" name="username" />
+                                <span class="text-danger">{{ errors.first('username') }}</span>
+                            </div>
+                            <br />
+                            <div>
+                                <label for="password">Passwort</label>
+                                <br /><br />
+                                <input type="password" id="password" v-model="addItemForm.Password"
+                                    v-validate="'required|min:6'" name="password" 
+                                    class="create_password_input" />
+                                <span class="text-danger">{{ errors.first('password') }}</span>
+                            </div>
+                            <br /><br /><br />
+                            <div>
+                                <label>
+                                    <input type="checkbox" v-model="addItemForm.can_create" /> Kann schreiben
+                                </label>
+                            </div>
+                            <div>
+                                <label>
+                                    <input type="checkbox" v-model="addItemForm.can_read" /> Kann lesen
+                                </label>
+                            </div>
+                            <div>
+                                <label>
+                                    <input type="checkbox" v-model="addItemForm.can_update" /> Kann ändern
+                                </label>
+                            </div>
+                            <div>
+                                <label>
+                                    <input type="checkbox" v-model="addItemForm.can_delete" /> Kann löschen
+                                </label>
+                            </div>
+                            <br />
+                            <br />
+                            <br />
+                            <div>
+                                <button @click="validateAndAddItem" class="btn btn-primary">Einstellen</button>
+                            </div>
+                        </form>
+                        </div>
+                    </section>
+
+
+
+                </main>
+
+            </div>
+            <footer class="benutzerkonteFooter">
+                <a href="">Impresum | </a>
+                <a href="">Datenschutzerkl&auml;rung | </a>
+                <a href="">Nutzungsbedingungen</a> <br />
+            </footer>
+
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="startseite.html"><i class="glyphicon glyphicon-home icon-size"></i></a>
+                        <ul>
+                            <li><a class="nav-name">Startseite</a></li>
+                        </ul>
+                    </li>
+                    <li style="color: #520884;"><i class="glyphicon glyphicon-user icon-size"><a
+                                href="benutzerkonte.html"></i></a>
+                        <ul>
+                            <li><a class="nav-name" style="color: #520884;">Benutzerkonte</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="inventar.html"><i class="bi bi-ui-checks-grid icon-size"></i></a>
+                        <ul>
+                            <li><a class="nav-name">Inventar</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="lagerunterseite.html"><i class="bi bi-house-down-fill icon-size"></i></a>
+                        <ul>
+                            <li><a class="nav-name">Lagerunterseite</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="lieferanten.html"><i class="bi bi-truck-front-fill icon-size"></i>
+                            </i>
+                        </a>
+                        <ul>
+                            <li><a class="nav-name">Lieferanten</a></li>
+                        </ul>
+                    </li>
+
+                </ul>
+            </nav>
+        </div>
+    </div>
+</body>
+
+<script type="module">
+    import { debounce } from './js/debounce.js';
+    import { refreshAccessToken } from './js/authenticate.js'
+    import { handleAuthFailure } from './js/handleAuthFailure.js';
+
+
+    //veevalidate configuration
+    Vue.use(VeeValidate);
+
+    VeeValidate.Validator.localize('de', {
+        messages: {
+            required: 'Dieses Feld ist erforderlich.',
+            min: (field, args) => `${field} muss mindestens ${args[0]} Zeichen lang sein.`
+        },
+        attributes: {
+            username: 'Benutzername',
+            password: 'Passwort'
+        }
+    });
+
+
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                items: [],
+                retryCount: 0,
+                maxRetries: 3,
+                isUploadFailed: false,
+                showQRCodeModalStatus: false,
+                selectedItemForQRCode: null,
+
+                addItemForm: {
+                    Username: '',
+                    can_create: '',
+                    can_read: '',
+                    can_update: '',
+                    can_delete: '',
+                    Password: '',
+                    username_forgivnen: false
+                }
+
+            };
+        },
+        async mounted() {
+            await new Promise(resolve => setTimeout(resolve, 500))
+            this.fetchInventory();
+        },
+
+        methods: {
+            async fetchInventory() {
+                try {
+                    const uid = Cookies.get('uid')
+                    const access_token = Cookies.get('access_token')
+
+                    console.log("fetchInventory");
+
+                    const response = await axios.post('http://localhost:5001/get_users', null, {
+                        headers: {
+                            'uid': uid,
+                            'accesstoken': access_token
+                        }
+                    });
+
+                    if (response.status === 200) {
+                        this.items = response.data.items
+                        console.log(response.data.items)
+
+                        if (response.data.new_access_token) {
+                            Cookies.set('access_token', response.data.new_access_token);
+                            console.log("Set new Accesstoken:", response.data.new_access_token);
+                        }
+
+                        this.retryCount = 0;
+                    } else {
+                        if (response.data.new_access_token != null) {
+                            Cookies.set('access_token', response.data.new_access_token)
+                        }
+                        else {
+                            await handleAuthFailure(this)
+
+                        }
+                    }
+                } catch (error) {
+                    console.error('fetchInventory failed:', error);
+                    await handleAuthFailure(this);
+                }
+
+            },
+            sortTable(column) {
+
+            },
+            validateAndAddItem() {
+                this.$validator.validateAll().then(valid => {
+                    if (valid) {
+                        this.addItem();
+                    } else {
+                        alert("Bitte korrigieren Sie das Formular.");
+                    }
+                });
+            },
+
+            async addItem() {
+                console.log('add new item');
+                const uid = Cookies.get('uid');
+                const access_token = Cookies.get('access_token');
+
+                const newItemData = {
+                    Username: this.addItemForm.Username,
+                    Password: this.addItemForm.Password,
+                    can_create: this.addItemForm.can_create,
+                    can_read: this.addItemForm.can_read,
+                    can_update: this.addItemForm.can_update,
+                    can_delete: this.addItemForm.can_delete
+                };
+
+                try {
+                    const response = await axios.post('http://localhost:5001/add_user', newItemData, {
+                        headers: {
+                            'uid': uid,
+                            'accesstoken': access_token
+                        }
+                    });
+
+                    if (response.status === 200) {
+                        Cookies.set('access_token', response.data.new_access_token);
+
+                        console.log(response.data.status);
+                        const status = response.data.status;
+                        if (status === "add_user_username_forgiven") {
+                            this.addItemForm.username_forgivnen = true;
+                        } else {
+                            location.reload();
+                        }
+                    } else {
+                        if (response.data.new_access_token != null) {
+                            Cookies.set('access_token', response.data.new_access_token);
+                        } else {
+                            await handleAuthFailure(this);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Fehler beim Senden der Daten:', error);
+                    await handleAuthFailure(this);
+                }
+            }
+
+
+        }
+    });
+
+
+</script>
+
+</html>

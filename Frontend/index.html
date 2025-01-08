@@ -1,0 +1,143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="de" lang="de">
+
+<head>
+    <title>Willkommenseite</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <meta name="keywords" content="" />
+    <meta name="generator" content="Webocton - Scriptly (www.scriptly.de)" />
+
+    <link href="css-index.css" type="text/css" rel="stylesheet" />
+
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
+</head>
+</head>
+
+<body>
+<div id="wrapper">
+    <header>
+        <div class="LoginLogo">
+            <h1>LogiConnect</h1> 
+            <img src="user.png" alt="user" width="40px" height="auto"/>  
+        </div>
+        <div class="login-und-logo" id="login-feld">
+            <h2>Herzlich Willkommen</h2>
+
+            <form id="loginForm">
+                <label>Name/Personalnummer</label>
+                <br />
+                <input type="text" name="username" id="username" required/>
+                <br />
+                <br />
+                <br />
+                <label>Passwort</label>
+                <br />
+                <input type="password" name="password" id="passShow" required/>
+                <br />
+                <input type="checkbox" onclick="myFunction()"/> Show password
+                <br/><br/>
+                <input type="submit" value="Login" id="login"/>
+            </form>
+            <br /><br /><br /><br /><br />
+        </div>
+
+        <div class="login-und-logo">
+            <img src="index-login-logo.jpeg" id="firmaLoginFoto" alt="Firma Umfeld" width="790.29px"
+                height="369.325px;">
+            <input type="button" value="Bewertung" id="Bewertung" />
+        </div>
+    </header>
+
+    <script type="module">
+        
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('passShow').value;
+
+            try {
+                const response = await fetch('http://localhost:5001/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        'username': username,
+                        'password': password
+                    },
+                   
+                });
+
+                console.log("Login response:", response);
+                if (response.ok) {
+                    const data = await response.json();  
+                    Cookies.set('access_token', data.new_access_token, { expires: 30 });
+                    Cookies.set('refresh_token', data.new_refresh_token, { expires: 30 });
+                    Cookies.set('uid', data.uid, { expires: 30 });
+
+                    window.location = "startseite.html";
+                } else {
+                    const errorData = await response.json();
+                    alert('Login fehlgeschlagen: ' + errorData.message || 'Bitte versuchen Sie es erneuts');
+                }
+            } catch (error) {
+                alert('Es gab einen Fehler bei der Anmeldung.');
+            }
+        });
+    </script>
+
+    <aside>
+        <img class="firma_foto" src="umfeld.png" alt="Firma Umfeld"> 
+        <div class="Firma_Information">
+            <h2>Firma Lorem</h2>
+            <p>Lorem ipsum dolor sit amet, consetetur sadipscing 
+                elitr, sed diam nonumy eirmod tempor invidunt ut
+                labore et dolore magna aliquyam erat, sed diam
+                voluptua. At vero eos et accusam et justo duo 
+                dolores et ea rebum. Stet clita kasd gubergren, no 
+                sea takimata sanctus est Lorem ipsum dolor sit
+                amet.
+            </p>
+        </div>
+    </aside>
+
+    <main>
+        <section class="flex_container">
+            
+        </section>
+
+        <section class="bewertung_Kunde" style="overflow-y: scroll; height:400px;">
+            <h2>Bewertung</h2>
+            <div class="person_Bewertung">
+                
+            </div>
+        </section>
+
+        <section>
+            <button class="scroll" onclick="window.scrollTo(0, 0);">Click me</button>
+        </section>
+    </main>
+
+    <footer>
+        <a href="">Impresum | </a>
+        <a href="">Datenschutzerkl&auml;rung | </a>
+        <a href="">Nutzungsbedingungen</a> 
+    </footer>
+    <br/><br/><br/><br/><br/>
+    <nav></nav>
+</div>
+
+<script>
+function myFunction() {
+    var x = document.getElementById("passShow");
+    if (x.type === "password") {
+        x.type = "text";
+    } else {
+        x.type = "password";
+    }
+}
+</script>
+</body>
+</html>

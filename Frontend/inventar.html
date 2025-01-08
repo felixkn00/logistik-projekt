@@ -1,0 +1,765 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="de" lang="de">
+
+<head>
+    <title>Inventar</title>
+
+    <meta http-equiv="content-type" content="text/html" charset="UTF-8" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <meta name="keywords" content="" />
+    <meta name="generator" content="Webocton - Scriptly (www.scriptly.de)" />
+
+    <!-- Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
+
+    <link href="css-inventar.css" type="text/css" rel="stylesheet" />
+
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vee-validate@2.2.15/dist/vee-validate.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+
+
+
+    <script type="module">
+        import { authGuard } from './js/authGuard.js';
+
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "F5" || (event.ctrlKey && event.key === "r")) {
+                event.preventDefault();
+                console.log("Press F5 Key is disabled")
+            }
+        })
+
+
+
+        authGuard()
+
+    </script>
+    <style>
+
+    </style>
+
+</head>
+
+<body>
+    <div id="wrapper">
+        <div id="app">
+
+            <header>
+                <div class="LoginLogo">
+                    <h1>LogiConnect</h1>
+                    <img src="user.png" alt="user" width="40px" height="auto" />
+                </div>
+            </header>
+
+            <main>
+                <section>
+                    <br /><br /><br /><br />
+                    <h2>Inventar</h2>
+                    <form class="addItemForm">
+                        <h2>Neuen Artikel hinzufügen</h2>
+                        <br />
+                    
+                        <!-- Artikelnummer -->
+                        <label for="itemNumber">Artikelnummer:</label>
+                        <input type="text" id="itemNumber" v-model="addItemForm.ItemNumber"
+                            @keyup="debouncedCheckItemNumber()" placeholder="Artikelnummer" name="ItemNumber"
+                            v-validate="'required|alpha_num'" 
+                            :class="{ itemNumberAvailable: addItemForm.itemNumberAvailable, itemNumberForgiven: addItemForm.itemNumberForgiven }" />
+                        <span class="text-danger">{{ errors.first('ItemNumber') }}</span>
+                        <transition name="fade">
+                            <span class="span_available" v-if="addItemForm.itemNumberAvailable">Verfügbar</span>
+                        </transition>
+                        <transition name="fade">
+                            <span class="span_not_available" v-if="addItemForm.itemNumberForgiven">Nummer vergeben</span>
+                        </transition>
+                        <br /><br />
+                    
+                        <!-- Artikelname -->
+                        <label for="itemName">Artikelname:</label>
+                        <input type="text" id="itemName" v-model="addItemForm.ItemName" placeholder="Artikelname"
+                            name="ItemName" v-validate="'required|min:3|max:100|alpha_spaces'" />
+                        <span class="text-danger">{{ errors.first('ItemName') }}</span>
+                        <br /><br />
+                    
+                        <!-- Menge -->
+                        <label for="quantity">Menge:</label>
+                        <input type="number" id="quantity" v-model="addItemForm.Quantity" placeholder="Menge"
+                            name="Quantity" v-validate="'required|numeric|min_value:1'" />
+                        <span class="text-danger">{{ errors.first('Quantity') }}</span>
+                        <br /><br />
+                    
+                        <!-- Einzelpreis -->
+                        <label for="singlePrice">Einzelpreis:</label>
+                        <input type="number" id="singlePrice" v-model="addItemForm.SinglePrice"
+                            placeholder="Einzelpreis" name="SinglePrice"
+                            v-validate="'required|decimal:2|min_value:0.01'" />
+                        <span class="text-danger">{{ errors.first('SinglePrice') }}</span>
+                        <br /><br />
+                    
+                        <!-- Staffelpreis -->
+                        <label for="graduatedPrice">Staffelpreis:</label>
+                        <input type="number" id="graduatedPrice" v-model="addItemForm.GraduatedPrice"
+                            placeholder="Staffelpreis" name="GraduatedPrice"
+                            v-validate="'required|decimal:2|min_value:0'" />
+                        <span class="text-danger">{{ errors.first('GraduatedPrice') }}</span>
+                        <br /><br />
+                    
+                        <!-- Ablaufdatum -->
+                        <label for="expirationDate">Ablaufdatum:</label>
+                        <input type="date" id="expirationDate" v-model="addItemForm.ExpirationDate"
+                            placeholder="Ablaufdatum" name="ExpirationDate" />
+                        <br /><br />
+                    
+                    
+                        <input type="button" @click="validateAndAddItem()" value="Hinzufügen" />
+                    </form>
+                    
+                    <transition name="fade">
+                        <div v-if="showQRCodeModalStatus" class="qrCodeModal">
+                            <p>Chargen-Nr {{ selectedItemForQRCode.ItemNumber }}<br /><br />
+                                {{ selectedItemForQRCode.ItemName }}</p>
+                            <canvas id="qrcode" style="margin-top: 10px;"></canvas>
+                            <div>
+                                <input type="button" @click="downloadQRCode" value="QR-Code herunterladen" />
+                                <br /><br /><br />
+                                <input type="button" @click="showQRCodeModalStatus = false" value="Schließen" />
+                            </div>
+                        </div>
+                    </transition>
+
+                    <div v-if="isUploadFailed" class="isUploadFailedContainer">
+                        <h3 class="isUploadFailed">Hochladen fehlgeschlagen</h3>
+                    </div>
+
+                    <div class="table-responsive">
+
+                        <table class="tableInventar table-sortable table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th @click="sortTable('ItemID')">ArtikelNr &Delta;</th>
+                                    <th @click="sortTable('ItemNumber')">Chargen-Nr &Delta;</th>
+                                    <th @click="sortTable('artikelname')">Artikelname &Delta;</th>
+                                    <th @click="sortTable('menge')">Menge &Delta;</th>
+                                    <th @click="sortTable('einzelpreis')">Einzelpreis &Delta;</th>
+                                    <th @click="sortTable('staffelpreis')">Staffelpreis &Delta;</th>
+                                    <th @click="sortTable('ablaufdatum')">Ablaufdatum &Delta;</th>
+                                    <th style="color: #b8d1eb;">Speichern_,</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+
+                            <tr v-for="(item, index) in items" :key="index">
+                                <td>
+                                    <input type="text" v-model="item.ItemID"
+                                        :class="{'changed-input': item.changedFields.ItemID}"
+                                        @input="markFieldAsChanged(item, 'ItemID')"
+                                        style="padding: 1.5%; border: none; background: #eeeeee;" disabled />
+                                </td>
+                                <td>
+                                    <input type="text" v-model="item.ItemNumber"
+                                        :class="{'changed-input': item.changedFields.ItemNumber}"
+                                        @input="markFieldAsChanged(item, 'ItemNumber')"
+                                        style="padding: 1.5%; border: none; background: #eeeeee;" disabled />
+                                    <br /><br />
+                                    <input type="button" value="QR Anzeigen" @click="showQRCodeModal(item)" />
+                                </td>
+                                <td>
+                                    <input type="text" v-model="item.ItemName"
+                                        :class="{'changed-input': item.changedFields.ItemName}"
+                                        @input="markFieldAsChanged(item, 'ItemName')" />
+                                </td>
+                                <td>
+                                    <input type="number" v-model="item.StockQuantity"
+                                        :class="{'changed-input': item.changedFields.StockQuantity}"
+                                        @input="markFieldAsChanged(item, 'StockQuantity')" />
+                                </td>
+                                <td>
+                                    <input type="number" v-model="item.SinglePrice"
+                                        :class="{'changed-input': item.changedFields.SinglePrice}"
+                                        @input="markFieldAsChanged(item, 'SinglePrice')" />
+                                </td>
+                                <td>
+                                    <input type="number" v-model="item.GraduatedPrice"
+                                        :class="{'changed-input': item.changedFields.GraduatedPrice}"
+                                        @input="markFieldAsChanged(item, 'GraduatedPrice')" />
+                                </td>
+                                <td>
+                                    <input type="date" v-model="item.ExpiryDate"
+                                        :class="{'changed-input': item.changedFields.ExpiryDate}"
+                                        @input="markFieldAsChanged(item, 'ExpiryDate')" />
+                                </td>
+                                <td>
+                                    <div v-if="Object.values(item.changedFields).some(field => field)">
+                                        <button @click="saveChanges(item)"
+                                            class="btn btn-primary btn-sm">Speichern</button>
+                                    </div>
+                                </td>
+                                <td>
+                                    <button @click="moveToScareCommodity(item, index)"
+                                        class="btn btn-warning btn-sm">Aussortieren</button>
+                                    <br /><br />
+                                    <button @click="deleteItem(item, index)"
+                                        class="btn btn-danger btn-sm">Löschen</button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+
+
+                    </div>
+                </section>
+        </div>
+        </main>
+
+        <footer class="inventarFooter">
+            <a href="">Impresum | </a>
+            <a href="">Datenschutzerkl&auml;rung | </a>
+            <a href="">Nutzungsbedingungen</a>
+        </footer>
+
+        <nav>
+            <ul>
+                <li><a href="startseite.html"><i class="glyphicon glyphicon-home icon-size"></i></a>
+                    <ul>
+                        <li><a class="nav-name">Startseite</a></li>
+                    </ul>
+                </li>
+                <li><a href="benutzerkonte.html"><i class="glyphicon glyphicon-user icon-size"></i></a>
+                    <ul>
+                        <li><a class="nav-name">Benutzerkonte</a></li>
+                    </ul>
+                </li>
+                <li><a href="inventar.html"><i style="color: #520884;" class="bi bi-ui-checks-grid icon-size"></i></a>
+                    <ul>
+                        <li><a class="nav-name" style="color: #520884;">Inventar</a></li>
+                    </ul>
+                </li>
+                <li><a href="lagerunterseite.html"><i class="bi bi-house-down-fill icon-size"></i></a>
+                    <ul>
+                        <li><a class="nav-name">Lagerunterseite</a></li>
+                    </ul>
+                </li>
+                <li><a href="lieferanten.html"><i class="bi bi-truck-front-fill icon-size"></i>
+                        </i>
+                    </a>
+                    <ul>
+                        <li><a class="nav-name">Lieferanten</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <script type="module">
+        import { debounce } from './js/debounce.js';
+        import { refreshAccessToken } from './js/authenticate.js'
+        import { handleAuthFailure } from './js/handleAuthFailure.js';
+
+        Vue.use(VeeValidate);
+        VeeValidate.Validator.localize('de', {
+            messages: {
+                required: 'Dieses Feld ist erforderlich.',
+                alpha_num: 'Das Feld darf nur alphanumerische Zeichen enthalten.',
+                alpha_spaces: 'Das Feld darf nur Buchstaben und Leerzeichen enthalten.',
+                min: 'Das Feld muss mindestens {length} Zeichen lang sein.',
+                max: 'Das Feld darf maximal {length} Zeichen lang sein.',
+                numeric: 'Das Feld darf nur Zahlen enthalten.',
+                decimal: 'Das Feld muss eine Dezimalzahl sein.',
+                min_value: 'Das Feld muss mindestens {min} sein.',
+                after: 'Das Datum muss in der Zukunft liegen.'
+            },
+            attributes: {
+                ItemNumber: 'Artikelnummer',
+                ItemName: 'Artikelname',
+                Quantity: 'Menge',
+                SinglePrice: 'Einzelpreis',
+                GraduatedPrice: 'Staffelpreis',
+                ExpirationDate: 'Ablaufdatum'
+            }
+        });
+
+
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    items: [],
+                    retryCount: 0,
+                    maxRetries: 3,
+                    isUploadFailed: false,
+                    showQRCodeModalStatus: false,
+                    selectedItemForQRCode: null,
+
+                    addItemForm: {
+                        ItemNumber: '',
+                        ItemName: '',
+                        Category: '',
+                        StockQuantity: '',
+                        SinglePrice: '',
+                        GraduatedPrice: '',
+                        ExpiryDate: '',
+                        itemNumberAvailable: false,
+                        itemNumberForgiven: false,
+                    }
+
+                };
+            },
+            async mounted() {
+                await new Promise(resolve => setTimeout(resolve, 500))
+                this.fetchInventory();
+            },
+            watch: {
+                'addItemForm.ItemNumber': {
+                    handler() {
+                        if (this.addItemForm.ItemNumber.length === 0) {
+                            console.log(this.addItemForm.ItemNumber)
+                            this.addItemForm.itemNumberAvailable = false;
+                        }
+                    },
+                    immediate: true,
+                },
+            },
+
+            methods: {
+                async fetchInventory() {
+                    try {
+                        const uid = Cookies.get('uid')
+                        const access_token = Cookies.get('access_token')
+
+
+                        const response = await axios.get('http://localhost:5001/get_inventory', {
+                            headers: {
+                                'uid': uid,
+                                'accesstoken': access_token
+                            }
+                        });
+
+                        if (response.status === 200) {
+                            this.items = response.data.items
+
+                            if (response.data.new_access_token) {
+                                Cookies.set('access_token', response.data.new_access_token);
+                            }
+
+                            this.retryCount = 0;
+                        } else {
+                            if (response.data.new_access_token != null) {
+                                Cookies.set('access_token', response.data.new_access_token)
+                            }
+                            else {
+                                await handleAuthFailure(this)
+
+                            }
+                        }
+                    } catch (error) {
+                        await handleAuthFailure(this);
+                    }
+
+                },
+                sortTable(column) {
+
+                },
+                markFieldAsChanged(item, field) {
+                    if (!item.changedFields) {
+                        item.changedFields = {
+                            ItemID: false,
+                            ItemNumber: false,
+                            ItemName: false,
+                            StockQuantity: false,
+                            SinglePrice: false,
+                            GraduatedPrice: false,
+                            ExpiryDate: false,
+                            UploadError: false
+                        };
+                    }
+
+                    item.changedFields[field] = true;
+                },
+                async saveChanges(item) {
+                    const updatedData = {
+                        ItemID: item.ItemID,
+                        ItemNumber: item.ItemNumber,
+                        ItemName: item.ItemName,
+                        StockQuantity: item.StockQuantity,
+                        SinglePrice: item.SinglePrice,
+                        GraduatedPrice: item.GraduatedPrice,
+                        ExpiryDate: item.ExpiryDate
+                    };
+
+
+                    const uid = Cookies.get('uid')
+                    const access_token = Cookies.get('access_token')
+
+                    try {
+                        const response = await axios.post('http://localhost:5001/update_inventory', updatedData, {
+                            headers: {
+                                'uid': uid,
+                                'accesstoken': access_token
+                            }
+                        });
+
+                        if (response.status === 200) {
+
+                            this.isUploadFailed = false;
+
+                            Cookies.set('access_token', response.data.new_access_token);
+
+
+                            Object.keys(item.changedFields).forEach(key => {
+                                item.changedFields[key] = false;
+                            });
+                        } else {
+                            if (response.data.new_access_token != null) {
+                                Cookies.set('access_token', response.data.new_access_token)
+                            }
+                            else {
+                                await handleAuthFailure(this)
+
+                            }
+
+
+                        }
+                    } catch (error) {
+                        this.markFieldAsChanged(item, UploadError)
+                        this.isUploadFailed = true;
+
+                        await handleAuthFailure(this)
+                    }
+
+
+                },
+                showQRCodeModal(item) {
+                    this.showQRCodeModalStatus = true;
+                    this.selectedItemForQRCode = item;
+                    this.$nextTick(() => {
+                        setTimeout(() => {
+                            this.generateQRCode(item);
+                        }, 100);
+                    });
+                },
+                generateQRCode(item) {
+                    console.log("generateQRCode " + item.ItemNumber);
+
+                    const canvas = document.getElementById('qrcode');
+                    if (!canvas) {
+                        return;
+                    }
+
+                    const ctx = canvas.getContext('2d');
+                    const qrSize = 250;
+                    const textHeight = 60;
+
+                    canvas.width = qrSize;
+                    canvas.height = qrSize + textHeight;
+
+                    const qr = new QRious({
+                        value: item.ItemNumber,
+                        size: qrSize,
+                    });
+
+                    qr.image.onload = () => {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(qr.image, 0, 0, qrSize, qrSize);
+
+                        ctx.font = '20px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillStyle = '#000';
+                        ctx.fillText("Artikelname: " + item.ItemName, qrSize / 2, qrSize + 25);
+
+                        ctx.font = '16px Arial';
+                        ctx.fillText("Chargen-Nr: " + item.ItemNumber, qrSize / 2, qrSize + 50);
+                    };
+
+                    qr.image.onerror = () => {
+                        console.error('failed to load QR code image');
+                    };
+                },
+
+
+                downloadQRCode() {
+                    const canvas = document.getElementById('qrcode');
+                    const link = document.createElement('a');
+                    link.href = canvas.toDataURL('image/png');
+                    link.download = `${this.selectedItemForQRCode.ItemName}_${this.selectedItemForQRCode.ItemNumber}.png`;
+                    link.click();
+                }
+                ,
+                debouncedCheckItemNumber: debounce(async function () {
+                    await this.checkItemNumber();
+                }, 300),
+                async checkItemNumber() {
+                    try {
+                        console.log("check item number")
+
+                        const uid = Cookies.get('uid');
+                        const access_token = Cookies.get('access_token');
+
+
+                        const response = await axios.post('http://localhost:5001/check_item_number',
+                            {
+                                ItemNumber: this.addItemForm.ItemNumber
+                            },
+                            {
+                                headers: {
+                                    'uid': uid,
+                                    'accesstoken': access_token
+                                }
+                            });
+
+                        if (response.status === 200) {
+                            this.addItemForm.itemNumberForgiven = false;;
+
+
+                            if (response.data.new_access_token) {
+                                Cookies.set('access_token', response.data.new_access_token);
+                            }
+
+                            if (response.data.status == "item_number_is_free") {
+
+                                this.addItemForm.itemNumberForgiven = false;
+                                this.addItemForm.itemNumberAvailable = true;
+
+                                if (this.addItemForm.ItemNumber.length === 0) {
+                                    this.addItemForm.itemNumberForgiven = false;
+                                    this.addItemForm.itemNumberAvailable = false;
+                                }
+                            }
+                            if (response.data.status == "item_number_is_forgiven") {
+                                this.addItemForm.itemNumberForgiven = true;
+                                this.addItemForm.itemNumberAvailable = false;
+                            }
+
+
+                        } else {
+
+                            if (response.data.new_access_token) {
+                                Cookies.set('access_token', response.data.new_access_token);
+                            } else {
+                                await handleAuthFailure(this);
+                            }
+                        }
+                    } catch (error) {
+
+
+                        if (error.response && error.response.status === 401) {
+                            await handleAuthFailure(this);
+                        } else {
+                        }
+                    }
+                },
+                async deleteItem(item, index) {
+                    try {
+                        const uid = Cookies.get('uid');
+                        const access_token = Cookies.get('access_token');
+
+
+                        const response = await axios.post('http://localhost:5001/delete_inventory',
+                            {
+                                ItemID: item.ItemID
+                            },
+                            {
+                                headers: {
+                                    'uid': uid,
+                                    'accesstoken': access_token
+                                }
+                            });
+
+
+                        if (response.status === 200) {
+
+                            if (response.data.new_access_token) {
+                                Cookies.set('access_token', response.data.new_access_token);
+                            }
+
+                            this.items.splice(index, 1);
+
+
+                        } else {
+
+                            if (response.data.new_access_token) {
+                                Cookies.set('access_token', response.data.new_access_token);
+                            } else {
+                                await handleAuthFailure(this);
+                            }
+                        }
+                    } catch (error) {
+
+                        if (error.response && error.response.status === 401) {
+                            await handleAuthFailure(this);
+                        } else {
+                        }
+                    }
+                },
+                validateAndAddItem() {
+    this.$validator.validateAll().then(isValid => {
+        if (isValid) {
+            this.addItem();
+        } else {
+            console.log("Fehler in der Validierung. Bitte korrigieren.");
+        }
+    });
+},
+
+async addItem() {
+    if (this.addItemForm.itemNumberForgiven) {
+        alert("Artikelnummer vergeben. Bitte eine neue Nummer wählen.");
+        return;
+    }
+
+    if (
+        !this.addItemForm.ItemNumber ||
+        !this.addItemForm.ItemName ||
+        !this.addItemForm.Quantity ||
+        !this.addItemForm.SinglePrice ||
+        !this.addItemForm.GraduatedPrice
+    ) {
+        alert("Bitte fülle alle Felder aus");
+        return;
+    }
+
+    const uid = Cookies.get('uid');
+    const access_token = Cookies.get('access_token');
+
+    const newItemData = {
+        ItemNumber: this.addItemForm.ItemNumber,
+        ItemName: this.addItemForm.ItemName,
+        Category: this.addItemForm.Category,
+        StockQuantity: this.addItemForm.StockQuantity,
+        SinglePrice: this.addItemForm.SinglePrice,
+        GraduatedPrice: this.addItemForm.GraduatedPrice,
+        ExpiryDate: this.addItemForm.ExpiryDate,
+    };
+
+    try {
+        const response = await axios.post('http://localhost:5001/add_inventory', newItemData, {
+            headers: {
+                uid: uid,
+                accesstoken: access_token,
+            },
+        });
+
+        if (response.status === 200) {
+
+            if (response.data.new_access_token) {
+                Cookies.set('access_token', response.data.new_access_token);
+            }
+
+            const new_ItemID = response.data.new_ItemID;
+
+            this.items.push({
+                ItemID: new_ItemID,
+                ItemNumber: this.addItemForm.ItemNumber,
+                ItemName: this.addItemForm.ItemName,
+                Category: this.addItemForm.Category,
+                StockQuantity: this.addItemForm.StockQuantity,
+                SinglePrice: this.addItemForm.SinglePrice,
+                GraduatedPrice: this.addItemForm.GraduatedPrice,
+                ExpiryDate: this.addItemForm.ExpiryDate,
+                hasChanged: false,
+                changedFields: {
+                    ItemID: false,
+                    ItemNumber: false,
+                    ItemName: false,
+                    Category: false,
+                    StockQuantity: false,
+                    SinglePrice: false,
+                    GraduatedPrice: false,
+                    ExpiryDate: false,
+                },
+            });
+
+            this.addItemForm = {
+                ItemNumber: '',
+                ItemName: '',
+                Category: '',
+                StockQuantity: '',
+                SinglePrice: '',
+                GraduatedPrice: '',
+                ExpiryDate: '',
+                itemNumberAvailable: false,
+                itemNumberForgiven: false,
+            };
+
+            this.$validator.reset();
+
+            
+        } else {
+            
+            if (response.data.new_access_token) {
+                Cookies.set('access_token', response.data.new_access_token);
+            } else {
+                await handleAuthFailure(this);
+            }
+        }
+    } catch (error) {
+        await handleAuthFailure(this);
+    }
+},
+
+                async moveToScareCommodity(item, index) {
+
+
+                    const uid = Cookies.get('uid')
+                    const access_token = Cookies.get('access_token')
+
+                    try {
+                        const response = await axios.post('http://localhost:5001/add_scare_commodity_inventory',
+                            {
+                                ItemID: item.ItemID
+                            }, {
+                            headers: {
+                                'uid': uid,
+                                'accesstoken': access_token
+                            }
+                        });
+
+                        if (response.status === 200) {
+
+                            this.isUploadFailed = false;
+
+                            Cookies.set('access_token', response.data.new_access_token);
+
+                            this.items.splice(index, 1);
+
+                        } else {
+                            if (response.data.new_access_token != null) {
+                                Cookies.set('access_token', response.data.new_access_token)
+                            }
+                            else {
+                                await handleAuthFailure(this)
+
+                            }
+
+
+                        }
+                    } catch (error) {
+                        this.markFieldAsChanged(item, UploadError)
+                        this.isUploadFailed = true;
+
+                        await handleAuthFailure(this)
+                    }
+                }
+
+
+
+
+            }
+        });
+
+
+    </script>
+
+
+    <script src="sort.js"></script>
+</body>
